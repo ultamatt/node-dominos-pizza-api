@@ -7,8 +7,8 @@ const is=new Is;
 const weakIs=new Is(false);
 
 class Menu{
-    constructor(storeID,lang='en') {
-        return this.#getMenu(storeID,lang);
+    constructor(storeID,lang='en', proxyPrefix='') {
+        return this.#getMenu(storeID,lang,proxyPrefix);
     }
 
     menu={
@@ -37,7 +37,7 @@ class Menu{
     }
 
     get dominosAPIResponse(){
-        return this.#dominosAPIResponse; 
+        return this.#dominosAPIResponse;
     }
 
     set dominosAPIResponse(value){
@@ -48,8 +48,9 @@ class Menu{
 
     #dominosAPIResponse={}
 
-    async #getMenu(storeID,lang){
+    async #getMenu(storeID,lang,proxyPrefix){
         this.dominosAPIResponse=await get(
+            proxyPrefix +
             urls.store.menu
                 .replace('${storeID}', storeID)
                 .replace('${lang}', lang)
@@ -66,7 +67,7 @@ class Menu{
         //define categories
         for(const [categoryKey, dominosCategory] of Object.entries(this.dominosAPIResponse.Categorization)){
             const category= this.menu.categories[toCamel(categoryKey)]={};
-            
+
             this.#defineCategories(
                 dominosCategory.Categories,
                 category
@@ -90,7 +91,7 @@ class Menu{
 
         this.#allDescendantsToCamel(this.dominosAPIResponse.CouponTiers,this.menu.coupons.couponTiers);
         this.#allDescendantsToCamel(this.dominosAPIResponse.ShortCouponDescriptions,this.menu.coupons.shortCouponDescriptions);
-        
+
     }
 
     #defineCategories(categories,menuParent){
@@ -102,49 +103,49 @@ class Menu{
             if(category.Code.length){
                 formattedCategory.code=category.Code;
             }
-    
+
             if(category.Name.length){
                 formattedCategory.name=category.Name;
             }else{
                 //if the name is missing populate it with the code
                 formattedCategory.name=category.Code;
             }
-    
+
             if(category.Description.length){
                 formattedCategory.description=category.Description;
             }
-    
+
             formattedCategory.hasSubCategories=false;
-    
+
             if(category.Categories.length){
                 formattedCategory.hasSubCategories=true;
                 formattedCategory.subCategories={};
-    
+
                 this.#defineCategories(
                     category.Categories,
                     formattedCategory.subCategories
                 );
             }
-    
+
             formattedCategory.hasProducts=false;
-    
+
             if(category.Products.length){
                 formattedCategory.hasProducts=true;
                 formattedCategory.products=category.Products;
             }
-    
+
             formattedCategory.hasTags=false;
 
         }
     }
-    
+
     #camelCaseKeys(dominos,menu){
         for(const [key,value] of Object.entries(dominos)){
             //console.log(key);
             menu[toCamel(key)]=dominos[key];
         }
     }
-    
+
     #allDescendantsToCamel(dominos,menu){
         if(weakIs.object(dominos)){
             for(const [key,value] of Object.entries(dominos)){
@@ -162,7 +163,7 @@ class Menu{
             }
         }
     }
-    
+
     #allGrandDescendantsToCamel(dominos,menu){
         if(weakIs.object(dominos)){
             //console.log(menu);
@@ -173,7 +174,7 @@ class Menu{
             }
         }
     }
-    
+
     #allParentAndGrandDescendantsToCamel(dominos,menu){
         if(weakIs.object(dominos)){
             //console.log(menu);
@@ -181,13 +182,13 @@ class Menu{
                 this.#camelCaseKeys(dominos,menu);
                 for(const [key,value] of Object.entries(dominos)){
                     const menuChild=menu[toCamel(key)]={};
-                    
+
                     this.#allGrandDescendantsToCamel(value,menuChild);
                 }
             }
         }
     }
-   
+
 }
 
 export {

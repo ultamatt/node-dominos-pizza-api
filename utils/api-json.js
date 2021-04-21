@@ -33,7 +33,7 @@ const get = async function(url){
         }
     };
 
-    //console.log(options,url);
+    console.log(options,url);
 
     const res=await fetch(
         url,
@@ -45,7 +45,7 @@ const get = async function(url){
     return await res.json();
 }
 
-const getTracking = async function(url,market='UNITED_STATES'){
+const getTracking = async function(url, market='UNITED_STATES'){
     const options = {
         "headers": {
             "accept": "application/json",

@@ -19,7 +19,8 @@ class Customer extends DominosFormat{
     address     =new Address
     phone       =''
     phonePrefix =''
-    
+    proxyPrefix =''
+
 };
 
 export {

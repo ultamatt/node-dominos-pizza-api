@@ -23,7 +23,7 @@ class Order extends DominosFormat{
     coupons = []
     currency = ''
     customerID = ''
-    
+
     estimatedWaitMinutes = ''
     email = ''
     extension = ''
@@ -47,6 +47,7 @@ class Order extends DominosFormat{
     phonePrefix = ''
     priceOrderMs=0
     priceOrderTime = ''
+    proxyPrefix = ''
     products = []
     promotions={}
     pulseOrderGuid=''
@@ -56,7 +57,7 @@ class Order extends DominosFormat{
     tags = {}
     userAgent=''
     version = '1.0'
-    
+
     orderInFuture(date){
         isDominos.date(date);
         const now=Date.now();
@@ -64,7 +65,7 @@ class Order extends DominosFormat{
             throw new DominosDateError('Order dates must be in the future.');
         }
         const dateString=date.toISOString().replace('T',' ').replace('.000Z','');
-        
+
         this.futureOrderTime=dateString;
     }
 
@@ -72,33 +73,33 @@ class Order extends DominosFormat{
         delete this.futureOrderTime;
     }
 
-    addCustomer(customer) { 
+    addCustomer(customer) {
         isDominos.customer(customer);
-        
+
         Object.assign(this,customer);
-        
+
         return this;
     }
 
-    addCoupon(couponCode) { 
+    addCoupon(couponCode) {
         isDominos.object(couponCode);
-        
+
         this.coupons.push(couponCode);
-        
+
         return this;
     }
 
-    removeCoupon(couponCode) { 
+    removeCoupon(couponCode) {
         isDominos.object(couponCode);
-        
+
         return this.#remove(couponCode,this.coupons);;
     }
 
-    addItem(item) { 
+    addItem(item) {
         isDominos.item(item);
 
         this.products.push(item);
-        
+
         return this;
     }
 
@@ -111,7 +112,7 @@ class Order extends DominosFormat{
     get payload(){
         const formatted=this.formatted;
         formatted.Address=this.address.formatted;
-        
+
         for(const [i,item] of Object.entries(this.products)){
             formatted.Products[i]=item.formatted;
         }
@@ -132,7 +133,7 @@ class Order extends DominosFormat{
             },
             // null,
             // 4
-        )   
+        )
     }
 
     // the setter is very large, so it is near the bottom of the class
@@ -141,7 +142,7 @@ class Order extends DominosFormat{
     }
 
     get validationResponse(){
-        return this.#validationResponse; 
+        return this.#validationResponse;
     }
 
     set validationResponse(value){
@@ -151,7 +152,7 @@ class Order extends DominosFormat{
     }
 
     get priceResponse(){
-        return this.#priceResponse; 
+        return this.#priceResponse;
     }
 
     set priceResponse(value){
@@ -161,7 +162,7 @@ class Order extends DominosFormat{
     }
 
     get placeResponse(){
-        return this.#placeResponse; 
+        return this.#placeResponse;
     }
 
     set placeResponse(value){
@@ -175,7 +176,7 @@ class Order extends DominosFormat{
     #validationResponse={}
 
     #placeResponse={}
-    
+
     #remove(child,parent){
 
         const index = parent.indexOf(child);
@@ -186,18 +187,19 @@ class Order extends DominosFormat{
         return this;
     }
 
-    async validate() {  
+    async validate() {
         if(!this.storeID){
             throw new DominosStoreError('Store ID must be set before validating order');
         }
 
         this.validationResponse=await post(
+            this.proxyPrefix +
             urls.order.validate,
             this.payload
         );
 
         const validation=this.validationResponse.Order;
-        
+
         //console.log(this.validationResponse)
 
         if(validation.Status==-1 || this.validationResponse.Status==-1){
@@ -219,6 +221,7 @@ class Order extends DominosFormat{
         }
 
         this.priceResponse=await post(
+            this.proxyPrefix +
             urls.order.price,
             this.payload
         );
@@ -226,7 +229,7 @@ class Order extends DominosFormat{
         //console.dir(JSON.parse(this.payload),{depth:5})
 
         const price=this.priceResponse.Order;
-        
+
         //console.dir(this.priceResponse,{depth:5})
 
         if(price.Status==-1 || this.priceResponse.Status==-1){
@@ -246,13 +249,14 @@ class Order extends DominosFormat{
         if(!this.products.length>0){
             throw new DominosProductsError('Order must contain product items before placing. `order.addItem(...)`');
         }
-        
+
         if(!this.address.region){
             console.log(this.address)
             throw new DominosAddressError('before you place an order, you must insure `order.address.region` is set');
         }
 
         this.placeResponse=await post(
+            this.proxyPrefix +
             urls.order.place,
             this.payload
         );
@@ -260,7 +264,7 @@ class Order extends DominosFormat{
         // console.dir(JSON.parse(this.payload),{depth:5})
 
         const placeOrder=this.placeResponse.Order;
-        
+
         // console.dir(this.placeResponse,{depth:5})
 
         if(placeOrder.Status==-1 || this.priceResponse.Status==-1){
@@ -276,8 +280,8 @@ class Order extends DominosFormat{
         // instance members
         this.address.formatted=orderResponse.Address;
         this.amountsBreakdown.formatted=orderResponse.AmountsBreakdown;
-        
-        //refreneces arrays/objects 
+
+        //refreneces arrays/objects
         for(const [key,promo] of Object.entries(orderResponse.Promotions)){
             this.promotions[toCamel(key)]=promo;
         }

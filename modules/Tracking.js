@@ -6,9 +6,9 @@ import {DominosFormat} from './DominosFormat.js';
 const is=new Is;
 
 class Tracking extends DominosFormat{
-    constructor(){
+    constructor(proxyPrefix=''){
         super();
-
+        this.proxyPrefix = proxyPrefix;
         return this;
     }
 
@@ -25,28 +25,28 @@ class Tracking extends DominosFormat{
 
     async byPhone(phone) {
         is.string(phone);
-    
-        const url=`${urls.trackRoot}${urls.track}?phonenumber=${phone}`;
-        
+
+        const url=`${this.proxyPrefix}${urls.trackRoot}${urls.track}?phonenumber=${phone}`;
+
         //console.log(url)
 
         this.#dominosPhoneAPIResult=await getTracking(url);
-        
+
         //console.dir(this.dominosPhoneAPIResult,{depth:10});
-        
+
         //Actions is an array should probably loop through
         //for now it is available on tracking.dominosPhoneAPIResult
-        
+
         try{
             is.object(this.#dominosPhoneAPIResult[0]);
         }catch(err){
             throw new DominosTrackingError('No results found;');
         }
 
-        const trackingURL=`${urls.trackRoot}${this.#dominosPhoneAPIResult[0].Actions.Track}`;
+        const trackingURL=`${this.proxyPrefix}${urls.trackRoot}${this.#dominosPhoneAPIResult[0].Actions.Track}`;
 
         this.#dominosAPIResult=await getTracking(trackingURL);
-        
+
         this.formatted=this.#dominosAPIResult;
         //console.dir(this.dominosAPIResult,{depth:10});
 
@@ -57,8 +57,8 @@ class Tracking extends DominosFormat{
     async byPhoneClassic(phone) {
         //you will need to parse this
         //with something like xml2js
-        this.#dominosPhoneAPIResult=await get(`${urls.track}Phone=${phone}`);
-        
+        this.#dominosPhoneAPIResult=await get(`${this.proxyPrefix}${urls.track}Phone=${phone}`);
+
         return this;
     }
 }

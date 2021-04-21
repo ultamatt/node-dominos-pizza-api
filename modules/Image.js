@@ -5,13 +5,13 @@ import Is from 'strong-type';
 const is=new Is;
 
 class Image extends Base64File{
-    constructor(productCode) {
+    constructor(productCode, proxyPrefix='') {
         is.string(productCode);
-        
+
         super();
-        
-        return this.#fetchImage(urls.images.replace('${productCode}',productCode));
-    } 
+
+        return this.#fetchImage(proxyPrefix + urls.images.replace('${productCode}',productCode));
+    }
 
     async #fetchImage(url){
         this.base64Image=await this.loadRemote(url,'');

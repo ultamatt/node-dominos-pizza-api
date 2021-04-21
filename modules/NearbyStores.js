@@ -7,18 +7,18 @@ const is=new Is;
 const defaultAddress=new Address('222 2nd St, San Francisco, CA 94105');
 
 class NearbyStores{
-    constructor(addressInfo=this.address, pickUpType='Delivery') {
-        
+    constructor(addressInfo=this.address, pickUpType='Delivery', proxyPrefix='') {
+
         this.address = new Address(addressInfo);
 
-        return this.#getStores(pickUpType);
+        return this.#getStores(pickUpType, proxyPrefix);
     }
 
     address=defaultAddress
     stores=[]
-    
+
     get dominosAPIResponse(){
-        return this.#dominosAPIResponse; 
+        return this.#dominosAPIResponse;
     }
 
     set dominosAPIResponse(value){
@@ -29,8 +29,9 @@ class NearbyStores{
 
     #dominosAPIResponse={}
 
-    async #getStores(pickUpType){
+    async #getStores(pickUpType, proxyPrefix){
         const stores=await get(
+            proxyPrefix +
             urls.store.find
                 .replace(
                     '${line1}',
@@ -54,7 +55,7 @@ class NearbyStores{
         this.stores=stores.Stores;
 
         //console.dir(this,{depth:1})
-        
+
         return this;
     }
 };

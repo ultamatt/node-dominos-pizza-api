@@ -9,19 +9,20 @@ const weakIs=new Is(false);
 class Store{
     //parameters object required
     //parameters.id also required as a minimum
-    constructor(id,lang='en') {
+    constructor(id,lang='en',proxyPrefix='') {
         //accept both string and number types for id
         if(!weakIs.number(id)&&!weakIs.string(id)){
             throw new ReferenceError(`Store class expects id to be a number or string, but got ${id}`);
         }
         is.string(lang);
 
-        return this.#init(id,lang);
+        return this.#init(id,lang,proxyPrefix);
     }
 
     async #init(id,lang) {
 
         this.info=await get(
+            proxyPrefix +
             urls.store.info.replace('${storeID}', id)
         );
 
